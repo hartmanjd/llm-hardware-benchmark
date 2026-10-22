@@ -1,0 +1,41 @@
+# CI (continuous integration): GitHub's robot that re-checks localbench on a fresh computer
+# every time a change is proposed or lands on main. It catches problems that only show up on
+# someone else's machine before they reach main. A green check on a PR means all of this passed.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One run per Python version: the oldest and newest that localbench supports
+# (requires-python in pyproject.toml), so it keeps working for users on either end.
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.13"]
+
+    # The same steps a person would do: get the code, install it with the exact tool versions
+    # from uv.lock, then run the same checks you can run locally (ruff for mistakes and
+    # formatting, pytest for the tests in tests/).
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: true
+
+      - name: Install
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check
+
+      - name: Check formatting
+        run: uv run ruff format --check
+
+      - name: Test
+        run: uv run pytest
