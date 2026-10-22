@@ -18,7 +18,9 @@ class ElectricityPrice(BaseModel):
 
 
 # Used when nobody has given a price: the US average residential price from the US Energy
-# Information Administration's Short-Term Energy Outlook (October 2026, forecast for 2026).
+# Information Administration's Short-Term Energy Outlook (October 2026, forecast for 2026):
+# https://www.eia.gov/outlooks/steo/report/elec_coal_renew.php
+# EIA data is published by the US government and is free to use.
 DEFAULT_PRICE = ElectricityPrice(per_kwh=0.182, source="US average, EIA 2026")
 
 
