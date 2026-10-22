@@ -2,7 +2,9 @@
 # what it needs, and how to package it so anyone can install it.
 
 # Who and what localbench is: the facts shown when someone looks the package up or installs it.
-# "dependencies" will list the outside libraries localbench needs to run; none yet.
+# "dependencies" are the outside libraries localbench needs to run: pydantic gives every piece
+# of data a fixed, checked shape; typer turns Python functions into terminal commands; rich
+# prints tidy tables and colors in the terminal.
 [project]
 name = "localbench"
 dynamic = ["version"]
@@ -12,7 +14,11 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "Justin Hartman" }]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pydantic>=2.14.1",
+    "rich>=15.0.0",
+    "typer>=0.27.3",
+]
 
 # How the code in src/ gets bundled into an installable package. The version number is read
 # from the package itself, so it only ever has to be changed in one place.
