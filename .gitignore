@@ -26,3 +26,6 @@ models/
 # Editor / OS junk
 .vscode/
 .DS_Store
+
+# Raw downloads used to build the price tables
+raw-price-data/

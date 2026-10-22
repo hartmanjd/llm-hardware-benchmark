@@ -39,6 +39,7 @@ path = "src/localbench/__init__.py"
 # The same checks run automatically on GitHub (see .github/workflows/ci.yml).
 [dependency-groups]
 dev = [
+    "openpyxl>=3.1.5",
     "pytest>=9.1.1",
     "ruff>=0.17.2",
 ]
