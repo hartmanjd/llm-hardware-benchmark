@@ -1,9 +1,13 @@
-# Tests for the terminal command. They run "localbench info" the way a person would, but with
-# made-up hardware, so they check what gets shown without depending on the machine running them.
+# Tests for the terminal command. They run the commands the way a person would, but with made-up
+# hardware and GPU readings, so they check what gets shown without depending on the machine
+# running them.
+
+import itertools
 
 from typer.testing import CliRunner
 
 from localbench import cli
+from localbench.gpu_monitor import GpuMonitor, GpuSample
 from localbench.hardware import GpuInfo, HardwareInfo
 
 runner = CliRunner()
@@ -36,3 +40,44 @@ def test_info_without_a_gpu(monkeypatch):
     result = runner.invoke(cli.app, ["info"])
     assert result.exit_code == 0
     assert "No NVIDIA GPU found" in result.output
+
+
+def fake_monitor(power_w):
+    # A GPU that reports the given power every second of a pretend clock, using 8 GB of VRAM.
+    clock = itertools.count()
+
+    def read():
+        return GpuSample(
+            time_s=next(clock),
+            power_w=power_w,
+            vram_used_gb=8.0,
+            utilization_pct=90,
+            temperature_c=65,
+        )
+
+    return lambda gpu_index: GpuMonitor(interval_s=0.001, gpu_index=gpu_index, reader=read)
+
+
+def test_monitor_shows_the_readings(monkeypatch):
+    monkeypatch.setattr(cli, "GpuMonitor", fake_monitor(power_w=250))
+    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.05"])
+    assert result.exit_code == 0
+    assert "250 W avg" in result.output
+    assert "8.0 GB peak" in result.output
+    assert " Wh" in result.output
+
+
+def test_monitor_when_power_is_not_reported(monkeypatch):
+    monkeypatch.setattr(cli, "GpuMonitor", fake_monitor(power_w=None))
+    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.05"])
+    assert result.exit_code == 0
+    assert "doesn't report power" in result.output
+
+
+def test_monitor_without_a_gpu(monkeypatch):
+    monkeypatch.setattr(
+        cli, "GpuMonitor", lambda gpu_index: GpuMonitor(interval_s=0.001, reader=lambda: None)
+    )
+    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.01"])
+    assert result.exit_code == 1
+    assert "No GPU readings" in result.output
