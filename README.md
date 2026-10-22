@@ -17,11 +17,19 @@ Each run measures:
 
 ## Data sources
 
-Electricity cost uses your own price per kWh when you give one. Otherwise it uses the US average
-residential price of $0.182/kWh, the 2026 figure from the US Energy Information Administration's
-[Short-Term Energy Outlook](https://www.eia.gov/outlooks/steo/report/elec_coal_renew.php)
-(October 2026). EIA data is published by the US government and is free to use. Each cost
-records which price it was based on.
+Electricity cost uses the most local price localbench has: your zip code, then your state or
+country, then the US average. A price per kWh that you give yourself always replaces these.
+Each cost records which price it was based on.
+
+| Price | Source | Covers | License |
+| --- | --- | --- | --- |
+| US zip codes | [NREL, U.S. Electric Utility Companies and Rates (2023)](https://catalog.data.gov/dataset/u-s-electric-utility-companies-and-rates-look-up-by-zipcode-2023), scaled by each state's change since 2023 (EIA) | Zip codes where one company both sells and delivers power | CC BY 4.0 |
+| US states | [EIA-861M monthly sales and revenue by state](https://www.eia.gov/electricity/data/state/), last 12 months | All 50 states and DC | Public domain |
+| Countries | [Eurostat, electricity prices for household consumers (nrg_pc_204)](https://ec.europa.eu/eurostat/databrowser/view/nrg_pc_204/default/table), all taxes included, in euros | 41 European countries | CC BY 4.0 |
+| US average | [EIA Short-Term Energy Outlook](https://www.eia.gov/outlooks/steo/report/elec_coal_renew.php), October 2026 | Whole US | Public domain |
+
+The tables in `src/localbench/data/` are built from these sources by
+`scripts/build_price_tables.py`.
 
 ## License
 
