@@ -1,19 +1,28 @@
-   # Python
-   __pycache__/
-   *.pyc
-   .venv/
-   venv/
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
 
-   # Secrets
-   .env
+# Test and lint caches
+.pytest_cache/
+.ruff_cache/
 
-   # Model weights (too big for GitHub)
-   *.gguf
-   *.safetensors
-   *.bin
-   *.pt
-   models/
+# Build output
+build/
+dist/
+*.egg-info/
 
-   # Editor / OS junk
-   .vscode/
-   .DS_Store
+# Secrets
+.env
+
+# Model weights (too big for GitHub)
+*.gguf
+*.safetensors
+*.bin
+*.pt
+models/
+
+# Editor / OS junk
+.vscode/
+.DS_Store
