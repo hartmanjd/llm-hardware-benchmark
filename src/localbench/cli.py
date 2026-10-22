@@ -9,6 +9,7 @@ import time
 
 import typer
 from rich.console import Console
+from rich.progress import BarColumn, Progress, TextColumn
 from rich.table import Table
 
 from localbench import __version__
@@ -77,9 +78,8 @@ def monitor(
     """Watch the GPU's power, memory, load and temperature, and what the power costs."""
     electricity = find_price(zip_code=zip_code, state=state, country=country, your_price=price)
 
-    console.print(f"Watching GPU {gpu} for {seconds:g} seconds...")
     with GpuMonitor(gpu_index=gpu) as gpu_monitor:
-        time.sleep(seconds)
+        watch_with_countdown(gpu_monitor, gpu, seconds)
     summary = gpu_monitor.summary()
 
     if summary is None:
@@ -107,3 +107,26 @@ def monitor(
     else:
         table.add_row("Energy and cost", "unknown (this GPU doesn't report power)")
     console.print(table)
+
+
+# The live view while monitor runs: a bar that fills up as the seconds pass, the time left, and
+# the GPU's latest power reading, so it's clear the watcher is working.
+
+
+def watch_with_countdown(gpu_monitor: GpuMonitor, gpu: int, seconds: float) -> None:
+    columns = (
+        TextColumn(f"Watching GPU {gpu}"),
+        BarColumn(),
+        TextColumn("{task.fields[left]}"),
+        TextColumn("{task.fields[power]}"),
+    )
+    with Progress(*columns, console=console, transient=True) as progress:
+        task = progress.add_task("watch", total=seconds, left="", power="")
+        start = time.monotonic()
+        while (elapsed := time.monotonic() - start) < seconds:
+            latest = gpu_monitor.samples[-1] if gpu_monitor.samples else None
+            power = f"{latest.power_w:.0f} W" if latest and latest.power_w is not None else ""
+            left = f"{seconds - elapsed:.0f} s left"
+            progress.update(task, completed=elapsed, left=left, power=power)
+            time.sleep(0.1)
+        progress.update(task, completed=seconds)
