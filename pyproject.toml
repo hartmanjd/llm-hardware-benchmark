@@ -20,6 +20,11 @@ dependencies = [
     "typer>=0.27.3",
 ]
 
+# Creates the "localbench" terminal command when the package is installed, and points it at
+# the app in src/localbench/cli.py.
+[project.scripts]
+localbench = "localbench.cli:app"
+
 # How the code in src/ gets bundled into an installable package. The version number is read
 # from the package itself, so it only ever has to be changed in one place.
 [build-system]
