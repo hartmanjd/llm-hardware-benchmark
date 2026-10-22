@@ -3,7 +3,7 @@
 # Everything a person types in the terminal ("localbench info", "localbench monitor", and later
 # "run", "doctor" and "results") starts here. This file only handles the conversation with the
 # person: it asks other modules for the actual work (hardware.py for the computer's details,
-# gpu_monitor.py for GPU readings) and shows the answers.
+# gpu_monitor.py and cost.py for GPU readings and their cost) and shows the answers.
 
 import time
 
@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from localbench import __version__
+from localbench.cost import DEFAULT_PRICE, ElectricityPrice, energy_cost, hourly_cost
 from localbench.gpu_monitor import GpuMonitor
 from localbench.hardware import detect_hardware
 
@@ -54,17 +55,24 @@ def info() -> None:
     console.print(gpus)
 
 
-# "localbench monitor": watches the GPU for a few seconds and shows what it used, the same
-# measurements that will be taken while every benchmark runs. Handy for seeing the readings work,
-# or for watching the GPU while something else (a game, a model) is running.
+# "localbench monitor": watches the GPU for a few seconds and shows what it used and what that
+# cost, the same measurements that will be taken while every benchmark runs. Handy for seeing
+# the readings work, or for watching the GPU while something else (a game, a model) is running.
 
 
 @app.command()
 def monitor(
     seconds: float = typer.Option(10, help="How long to watch the GPU."),
+    price: float | None = typer.Option(
+        None, help="Your electricity price per kWh. Defaults to the US average."
+    ),
     gpu: int = typer.Option(0, help="Which GPU to watch, by its # from 'localbench info'."),
 ) -> None:
-    """Watch the GPU's power, memory, load and temperature."""
+    """Watch the GPU's power, memory, load and temperature, and what the power costs."""
+    electricity = (
+        ElectricityPrice(per_kwh=price, source="your price") if price is not None else DEFAULT_PRICE
+    )
+
     console.print(f"Watching GPU {gpu} for {seconds:g} seconds...")
     with GpuMonitor(gpu_index=gpu) as gpu_monitor:
         time.sleep(seconds)
@@ -86,7 +94,12 @@ def monitor(
     table.add_row("Load", f"{summary.avg_utilization_pct:.0f}% avg")
     table.add_row("Temperature", f"{summary.peak_temperature_c:.0f} °C peak")
     if summary.energy_wh is not None:
+        cost = energy_cost(summary.energy_wh, electricity)
+        per_hour = hourly_cost(summary.avg_power_w, electricity)
+        unit = electricity.currency
         table.add_row("Energy", f"{summary.energy_wh:.3f} Wh")
+        table.add_row("Cost", f"{cost:.5f} {unit} ({per_hour:.3f} {unit} per hour at this power)")
+        table.add_row("Price used", f"{electricity.per_kwh} {unit}/kWh ({electricity.source})")
     else:
-        table.add_row("Energy", "unknown (this GPU doesn't report power)")
+        table.add_row("Energy and cost", "unknown (this GPU doesn't report power)")
     console.print(table)

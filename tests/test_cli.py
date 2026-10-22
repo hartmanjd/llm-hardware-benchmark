@@ -58,13 +58,19 @@ def fake_monitor(power_w):
     return lambda gpu_index: GpuMonitor(interval_s=0.001, gpu_index=gpu_index, reader=read)
 
 
-def test_monitor_shows_the_readings(monkeypatch):
+def test_monitor_shows_energy_and_cost(monkeypatch):
     monkeypatch.setattr(cli, "GpuMonitor", fake_monitor(power_w=250))
-    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.05"])
+    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.05", "--price", "0.20"])
     assert result.exit_code == 0
     assert "250 W avg" in result.output
-    assert "8.0 GB peak" in result.output
-    assert " Wh" in result.output
+    assert "0.050 USD per hour" in result.output
+    assert "your price" in result.output
+
+
+def test_monitor_uses_the_default_price(monkeypatch):
+    monkeypatch.setattr(cli, "GpuMonitor", fake_monitor(power_w=250))
+    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.05"])
+    assert "US average" in result.output
 
 
 def test_monitor_when_power_is_not_reported(monkeypatch):
