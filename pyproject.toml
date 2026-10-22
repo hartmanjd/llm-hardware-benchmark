@@ -1,0 +1,17 @@
+[project]
+name = "localbench"
+dynamic = ["version"]
+description = "Benchmark local LLMs on your own hardware: speed, memory use and power."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Justin Hartman" }]
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/localbench/__init__.py"
