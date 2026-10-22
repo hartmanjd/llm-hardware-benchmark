@@ -1,6 +1,5 @@
 """Watch the GPU's power, memory, load and temperature while something runs."""
 
-# A benchmark tells us how fast a model is; this module tells us what that speed costs the GPU.
 # While a model runs, a helper in the background keeps asking nvidia-smi for fresh readings.
 # When the run ends, the readings are boiled down into one summary: average and peak power,
 # the energy used, peak memory and temperature.
