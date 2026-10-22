@@ -87,3 +87,10 @@ def test_monitor_without_a_gpu(monkeypatch):
     result = runner.invoke(cli.app, ["monitor", "--seconds", "0.01"])
     assert result.exit_code == 1
     assert "No GPU readings" in result.output
+
+
+def test_monitor_with_a_zip_code(monkeypatch):
+    monkeypatch.setattr(cli, "GpuMonitor", fake_monitor(power_w=250))
+    result = runner.invoke(cli.app, ["monitor", "--seconds", "0.05", "--zip", "90210"])
+    assert result.exit_code == 0
+    assert "zip 90210 (CA)" in result.output

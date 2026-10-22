@@ -3,7 +3,7 @@
 # Everything a person types in the terminal ("localbench info", "localbench monitor", and later
 # "run", "doctor" and "results") starts here. This file only handles the conversation with the
 # person: it asks other modules for the actual work (hardware.py for the computer's details,
-# gpu_monitor.py and cost.py for GPU readings and their cost) and shows the answers.
+# gpu_monitor.py, cost.py and prices.py for GPU readings and their cost) and shows the answers.
 
 import time
 
@@ -12,9 +12,10 @@ from rich.console import Console
 from rich.table import Table
 
 from localbench import __version__
-from localbench.cost import DEFAULT_PRICE, ElectricityPrice, energy_cost, hourly_cost
+from localbench.cost import energy_cost, hourly_cost
 from localbench.gpu_monitor import GpuMonitor
 from localbench.hardware import detect_hardware
+from localbench.prices import find_price
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
@@ -63,15 +64,18 @@ def info() -> None:
 @app.command()
 def monitor(
     seconds: float = typer.Option(10, help="How long to watch the GPU."),
+    zip_code: str | None = typer.Option(
+        None, "--zip", help="Your US zip code, for your local electricity price."
+    ),
+    state: str | None = typer.Option(None, help="Your US state, like OH, if no zip is given."),
+    country: str | None = typer.Option(None, help="Your country, like DE, outside the US."),
     price: float | None = typer.Option(
-        None, help="Your electricity price per kWh. Defaults to the US average."
+        None, help="Your own electricity price per kWh, from your bill. Overrides the rest."
     ),
     gpu: int = typer.Option(0, help="Which GPU to watch, by its # from 'localbench info'."),
 ) -> None:
     """Watch the GPU's power, memory, load and temperature, and what the power costs."""
-    electricity = (
-        ElectricityPrice(per_kwh=price, source="your price") if price is not None else DEFAULT_PRICE
-    )
+    electricity = find_price(zip_code=zip_code, state=state, country=country, your_price=price)
 
     console.print(f"Watching GPU {gpu} for {seconds:g} seconds...")
     with GpuMonitor(gpu_index=gpu) as gpu_monitor:
