@@ -60,7 +60,7 @@ wheels = [
 ]
 
 [[package]]
-name = "localbench"
+name = "local-llm-bench"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
